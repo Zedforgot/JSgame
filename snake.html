@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+<style>
+  html,body{
+    width: 100%;height: 100%;
+  }
+  *{
+    margin:0;padding:0;box-sizing: border-box
+
+  }
+  li{list-style: none;}
+</style>
+</head>
+<body>
+  <button>开始游戏</button>
+  <button>暂停游戏</button>
+  <script>
+    //地图
+   function Map(box,xNum,yNum){
+    //  方块 方块宽高
+    this.box=box
+    //  地图宽度,方块横向数量
+    this.xNum=xNum    
+    //  地图高度,方块横向数量
+    this.yNum=yNum    
+    // 创建地图放body里
+    Map.prototype.createMap=function(){
+      //做地图
+      this.map=document.createElement('div')
+      this.map.style.cssText=`width:${this.box*this.xNum}px;height:${this.box*this.yNum}px;border:1px solid skyblue;position:relative`
+      document.body.appendChild(this.map)
+    // 做方块
+    var ul=document.createElement('ul')
+       this.map.appendChild(ul)
+    for(var y=0;y<this.yNum;y++){
+      for(var x=0;x<this.xNum;x++){
+       var box=document.createElement('li')
+       box.style.cssText=`z-index:-1;width:${this.box}px;height:${this.box}px;position:absolute;left:${x*this.box}px;top:${y*this.box}px;background-color:green;border:1px solid white;`
+       ul.appendChild(box)
+      }
+    }
+    }
+   }
+    //食物
+    function Food(map){
+      this.width=map.box
+      this.height=map.box
+      // 红色方块随机覆盖地图小方块
+      this.food=document.createElement('div')//创建食物
+      this.food.style.cssText=`width:${this.width}px;height:${this.height}px;position:absolute;z-index:2;background:red`
+      this.food.style.cssText+=`left:${Math.floor(map.xNum*Math.random())*this.width}px;top:${Math.floor(map.yNum*Math.random())*this.width}px`//随机位置
+      Food.prototype.createFood=function(){//创建食物
+map.map.appendChild(this.food)// 放到地图上，覆盖小方块
+      }
+      Food.prototype.clearFood=function(){//清除食物
+map.map.removeChild(this.food)// 放到地图上，覆盖小方块
+      }
+    }
+    //蛇
+function Snake(map){
+  this.width=map.box
+  this.height=map.box
+  this.direction='right'
+  this.snakeRunTime=null
+  // 数组保存蛇头，蛇身，蛇尾位置
+Snake.prototype.position=[
+  {x:0,y:0},
+  {x:1,y:0},
+  {x:2,y:0},
+]
+Snake.prototype.snakeBox=[]
+// 创建蛇
+Snake.prototype.createSnake=function(){
+for(var i=0;i<this.position.length;i++){
+  this.snakeBox[i]=document.createElement('div')
+  this.snakeBox[i].style.cssText=`width:${this.width}px;height:${this.height}px;background:blue;position:absolute;border:1px solid white`
+  this.snakeBox[i].style.left=this.position[i].x*this.width+'px'
+  this.snakeBox[i].style.top=this.position[i].y*this.height+'px'
+map.map.appendChild(this.snakeBox[i])
+}
+}
+// 蛇的运动
+Snake.prototype.run=function(foodObj){
+var f=foodObj.food
+this.snakeRunTime=setInterval(()=>{
+  // 保存蛇尾部分
+  var snakeEndX=this.position[0].x
+  var snakeEndY=this.position[0].y
+//定时改变蛇的位置
+  for(var i=0;i<this.position.length-1;i++){
+    this.position[i].x=this.position[i+1].x
+    this.position[i].y=this.position[i+1].y
+  }
+  // 蛇头位置另外处理，考虑到方向
+  switch (this.direction){
+  case 'right'://默认向右
+  this.position[this.position.length-1].x++;break
+  case 'left':
+  this.position[this.position.length-1].x--;break
+  case 'up':
+  this.position[this.position.length-1].y--;break
+  case 'down':
+  this.position[this.position.length-1].y++;break
+  }
+  window.onkeydown=(e)=>{//键盘绑定方向
+     switch (e.keyCode){
+      case 38:
+        if(this.direction!=='down'){
+        this.direction='up';
+      }
+         break;
+      case 40:
+        if(this.direction!=='up'){
+        this.direction='down'; 
+      }
+        break;
+      case 37:
+        if(this.direction!=='right'){
+        this.direction='left';
+      }
+        break;
+      case 39:
+        if(this.direction!=='left'){
+        this.direction='right';
+      }
+      break;
+     }
+   }
+  // 设置出圈违反规则给提示
+  if(
+  this.position[this.position.length-1].x==map.xNum
+  ||
+  this.position[this.position.length-1].y==map.yNum
+  ||
+this.position[this.position.length-1].x<0
+||
+this.position[this.position.length-1].y<0
+  ){
+alert('game over')
+  clearInterval(this.snakeRunTime)
+  //撞墙游戏结束后，清除原有蛇身，重新开始游戏
+this.clearSnake()
+return
+  }
+// 蛇触碰到食物，清除食物，重新创建食物
+if(
+  this.position[this.position.length-1].x*map.box==parseFloat(getComputedStyle(f).left)
+&&
+this.position[this.position.length-1].y*map.box==parseFloat(getComputedStyle(f).top)
+){
+  foodObj.clearFood()
+let food=new Food(map)
+foodObj=food
+f=foodObj.food
+food.createFood()
+// 蛇身加长
+//蛇吃到食物后蛇身变长
+this.position.unshift({x:snakeEndX,y:snakeEndY})
+}
+  // 每次蛇活动后清除原有蛇身
+  this.clearSnake()
+  // 根据改变后的位置重新创建蛇，确定蛇的新位置
+this.createSnake()
+},500)
+}
+Snake.prototype.stop=function(){//清除定时器，取消键盘事件
+  clearInterval(this.snakeRunTime)
+  window.onkeydown=null
+}
+//清除蛇身
+Snake.prototype.clearSnake=function(){
+for(var i=0;i<this.snakeBox.length;i++){
+  map.map.removeChild(this.snakeBox[i])
+}
+}
+}
+   var btn1=document.getElementsByTagName('button')[0]
+   var btn2=document.getElementsByTagName('button')[1]
+   btn1.onclick=(function(){//开始游戏，创建地图，蛇身，食物
+    var box=20//格子大小
+    var xNum=30
+    var yNum=18
+   var map=new Map(box,xNum,yNum)
+   var food=new Food(map)
+    var snake=new Snake(map)
+    return function (){
+      if(map.map){//如果有地图，说明当前已经有了游戏
+        // 此时删除地图，清除定时器，删除蛇身，删除食物
+  snake.stop()
+    document.body.removeChild(map.map)
+    // 重新创建游戏元素
+  map=new Map(box,xNum,yNum)
+  food=new Food(map)
+  snake=new Snake(map)      
+}
+   map.createMap()
+  food.createFood()
+   snake.createSnake()
+   snake.run(food)
+   btn2.onclick=(function(){
+    var btn3=document.createElement('div')
+    btn3.style.cssText='position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background-color:white;width:60px;line-height:60px;text-align:center'
+    btn3.innerText='继续'
+    btn3.onclick=function (){//继续游戏，从之前的位置开始
+     map.map.removeChild(btn3)
+      snake.run(food)
+    }
+    return function (){//暂停游戏，保留位置
+      // 如果地图上没有继续方块，那么加到地图中
+      if(btn3.parentNode!==map.map){
+        map.map.appendChild(btn3)
+      }
+      snake.stop()
+}
+   }())
+   }
+   }())
+  </script>
+</body>
+</html>
