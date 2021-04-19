@@ -106,7 +106,11 @@ this.snakeRunTime=setInterval(()=>{
   case 'down':
   this.position[this.position.length-1].y++;break
   }
+
+  // 节流控制键盘事件，防止在下次移动前多次点击方向导致蛇返回
+var flag=true
   window.onkeydown=(e)=>{//键盘绑定方向
+if(flag){
      switch (e.keyCode){
       case 38:
         if(this.direction!=='down'){
@@ -129,6 +133,11 @@ this.snakeRunTime=setInterval(()=>{
       }
       break;
      }
+}
+flag=false
+setTimeout(()=>{
+  flag=true
+},500)
    }
   // 设置出圈违反规则给提示
   if(
@@ -140,6 +149,20 @@ this.position[this.position.length-1].x<0
 ||
 this.position[this.position.length-1].y<0
   ){
+alert('game over')
+  clearInterval(this.snakeRunTime)
+  //撞墙游戏结束后，清除原有蛇身，重新开始游戏
+this.clearSnake()
+return
+  }
+ // 设置咬到自己违反规则给提示
+ if(
+  this.position.slice(0,this.position.length-1).find(element => 
+  this.position[this.position.length-1].x==element.x
+  &&
+  this.position[this.position.length-1].y===element.y
+   )
+ ){//蛇头碰都蛇身任意节点
 alert('game over')
   clearInterval(this.snakeRunTime)
   //撞墙游戏结束后，清除原有蛇身，重新开始游戏

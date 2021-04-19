@@ -5,23 +5,135 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
 </head>
+<style>
+    *{
+        margin: 0;padding: 0;
+    }
+    html,body{
+        width:100%;height:100%
+    }
+</style>
 <body>
 <script>
-//地图
-//地图随机产生坦克，有个老窝，有障碍物
-
-//坦克
-// 上下左右运动，发射子弹
-
-//子弹
-// 子弹碰到坦克，坦克消失
-
-
-
-
-    function Tank(){
-        this.
+    var flag=true
+        window.onkeydown=(e)=>{//键盘绑定方向
+    if(flag){
+        console.log(666);  
+    flag=false
+    setTimeout(()=>{
+flag=true
+    },3000)
+}
     }
+
+
+
+//地图
+//地图随机产生坦克
+// 有障碍物
+    function Map(){
+        this.width=document.documentElement.clientWidth
+        this.height=document.documentElement.clientHeight
+        this.canvas=document.createElement('div')
+        this.canvas.style.cssText=
+        `width:${this.width}px;height:${this.height}px;border:5px solid #333;box-sizing:border-box;position:relative`
+        Map.prototype.createMap=function(){
+            document.body.appendChild(this.canvas)
+        }
+    }
+    //老家
+//在地图上
+    // function Home(){
+
+    // }
+
+    //坦克
+// 上下左右运动，发射子弹
+// 子弹的运动轨迹
+// 子弹碰到坦克，坦克消失，子弹消失
+// 子弹碰到地图边界，子弹消失
+// 子弹碰到老家，游戏结束
+
+// 挖掘坦克的共有属性和方法为坦克原型，分别写电脑坦克继承坦克原型，随机发射子弹，随意走动，和自主坦克由玩家控制
+    function Tank(map){
+//坦克
+this.box=document.createElement('div')
+this.box.style.cssText=`width:30px;height:30px;position:absolute`
+//炮弹
+this.ammunition=document.createElement('div')
+this.ammunition.style.cssText=`width:4px;height:4px;background-color:black;position:absolute`
+console.log(getComputedStyle(this.box).left,getComputedStyle(this.box).top);
+this.ammunition.style.left=getComputedStyle(this.box).left
+this.ammunition.style.top=getComputedStyle(this.box).top
+// 坦克方向
+this.direction='up'
+}
+Tank.prototype.createTank=function(){
+map.canvas.appendChild(this.box)
+map.canvas.appendChild(this.ammunition)
+}
+Tank.prototype.shoot=function(){
+setInterval(()=>{
+    switch(this.direction){
+        case 'up':
+        this.ammunition.style.top=parseFloat(getComputedStyle(this.ammunition).top)-1+'px'
+        break;
+        case 'down':
+        this.ammunition.style.top=parseFloat(getComputedStyle(this.ammunition).top)+1+'px'
+        break;
+        case 'left':
+        this.ammunition.style.top=parseFloat(getComputedStyle(this.ammunition).left)-1+'px'
+        break;
+        case 'right':
+        this.ammunition.style.top=parseFloat(getComputedStyle(this.ammunition).left)+1+'px'
+        break;
+    }
+},10)
+}
+//坦克的方向控制
+Tank.prototype.control=function(){
+// window.onkeydown=(e)=>{
+//     console.log(e.keyCode);
+//     switch(e.keyCode){
+//         case '38':
+//         this.direction='up'
+//         break;
+//         case '40':
+//         this.direction='down'
+//         break;
+//         case '37':
+//         this.direction='left'
+//         break;
+//         case '39':
+//         this.direction='right'
+//         break;
+//         case '32'://发射子弹
+//         this.shoot()
+//         break;
+//     }
+// }
+}
+//自主坦克由玩家控制
+function PersonTank(map) {
+Tank.call(this,map)
+//自主坦克的样式属性添加
+this.box.style.left=parseFloat(getComputedStyle(map.canvas).width)*0.5+'px';
+this.box.style.bottom=0
+this.box.style.backgroundColor='yellow'
+this.box.style.transform='translateX(-50%)'
+this.control()
+}
+PersonTank.prototype=Object.create(Tank.prototype)
+PersonTank.prototype.constructor=PersonTank
+
+
+// 电脑坦克继承坦克原型，随机发射子弹，随意走动，给个数组，数组中元素为坦克个数，定时器创造坦克节点，最多10个，取消定时器，
+    var map=new Map()
+    map.createMap()
+    var tank=new PersonTank(map)
+    console.log(tank);
+    tank.createTank()
+    // tank.shoot()
 </script>
 </body>
 </html>
