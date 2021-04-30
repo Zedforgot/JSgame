@@ -15,19 +15,6 @@
 </style>
 <body>
 <script>
-    var flag=true
-        window.onkeydown=(e)=>{//键盘绑定方向
-    if(flag){
-        console.log(666);  
-    flag=false
-    setTimeout(()=>{
-flag=true
-    },3000)
-}
-    }
-
-
-
 //地图
 //地图随机产生坦克
 // 有障碍物
@@ -36,10 +23,12 @@ flag=true
         this.height=document.documentElement.clientHeight
         this.canvas=document.createElement('div')
         this.canvas.style.cssText=
-        `width:${this.width}px;height:${this.height}px;border:5px solid #333;box-sizing:border-box;position:relative`
+        `width:${this.width}px;height:${this.height}px;background-color:black;box-sizing:border-box;position:relative`
         Map.prototype.createMap=function(){
             document.body.appendChild(this.canvas)
         }
+        // this.borderWidth=this.width-parseFloat(this.canvas.style.borderLeft)*2
+        // this.borderHeight=this.height-parseFloat(this.canvas.style.borderTop)*2
     }
     //老家
 //在地图上
@@ -56,84 +45,188 @@ flag=true
 
 // 挖掘坦克的共有属性和方法为坦克原型，分别写电脑坦克继承坦克原型，随机发射子弹，随意走动，和自主坦克由玩家控制
     function Tank(map){
-//坦克
+// 地图
+this.map=map
+        //坦克
 this.box=document.createElement('div')
 this.box.style.cssText=`width:30px;height:30px;position:absolute`
-//炮弹
-this.ammunition=document.createElement('div')
-this.ammunition.style.cssText=`width:4px;height:4px;background-color:black;position:absolute`
-console.log(getComputedStyle(this.box).left,getComputedStyle(this.box).top);
-this.ammunition.style.left=getComputedStyle(this.box).left
-this.ammunition.style.top=getComputedStyle(this.box).top
+// 坦克边界
+this.borderWidth=map.width-parseFloat(this.box.style.width)
+this.borderHeight=map.height-parseFloat(this.box.style.height)
 // 坦克方向
 this.direction='up'
 }
 Tank.prototype.createTank=function(){
-map.canvas.appendChild(this.box)
-map.canvas.appendChild(this.ammunition)
+this.map.canvas.appendChild(this.box)
 }
+//发射炮弹
 Tank.prototype.shoot=function(){
-setInterval(()=>{
-    switch(this.direction){
+    //创造炮弹
+var ammunition=document.createElement('div')
+ ammunition.style.cssText=`width:4px;height:4px;background-color:white;position:absolute`
+ammunition.style.left=parseFloat(getComputedStyle(this.box).left)+parseFloat(getComputedStyle(this.box).width)/2+'px'
+ammunition.style.top=parseFloat(getComputedStyle(this.box).top)+parseFloat(getComputedStyle(this.box).height)/2+'px'
+map.canvas.appendChild(ammunition)
+var ammunitionDirection=this.direction
+//炮弹方向与运动
+var ammunitionTime=setInterval(()=>{
+    switch(ammunitionDirection){
         case 'up':
-        this.ammunition.style.top=parseFloat(getComputedStyle(this.ammunition).top)-1+'px'
+        ammunition.style.top=parseFloat(getComputedStyle(ammunition).top)-1+'px'
+        if(parseFloat(getComputedStyle(ammunition).top)<0){
+            clearInterval(ammunitionTime)
+        map.canvas.removeChild(ammunition)
+        }
         break;
         case 'down':
-        this.ammunition.style.top=parseFloat(getComputedStyle(this.ammunition).top)+1+'px'
+        ammunition.style.top=parseFloat(getComputedStyle(ammunition).top)+1+'px'
+        if(parseFloat(getComputedStyle(ammunition).top)>map.height-parseFloat(getComputedStyle(ammunition).height)){
+            clearInterval(ammunitionTime)
+        map.canvas.removeChild(ammunition)
+        }
         break;
         case 'left':
-        this.ammunition.style.top=parseFloat(getComputedStyle(this.ammunition).left)-1+'px'
+        ammunition.style.left=parseFloat(getComputedStyle(ammunition).left)-1+'px'
+        if(parseFloat(getComputedStyle(ammunition).left)<0){
+            clearInterval(ammunitionTime)
+        map.canvas.removeChild(ammunition)
+        }
         break;
         case 'right':
-        this.ammunition.style.top=parseFloat(getComputedStyle(this.ammunition).left)+1+'px'
+        ammunition.style.left=parseFloat(getComputedStyle(ammunition).left)+1+'px'
+        if(parseFloat(getComputedStyle(ammunition).left)>map.width-parseFloat(getComputedStyle(ammunition).width)){//
+            clearInterval(ammunitionTime)
+        map.canvas.removeChild(ammunition)
+        }
         break;
     }
 },10)
 }
-//坦克的方向控制
-Tank.prototype.control=function(){
-// window.onkeydown=(e)=>{
-//     console.log(e.keyCode);
-//     switch(e.keyCode){
-//         case '38':
-//         this.direction='up'
-//         break;
-//         case '40':
-//         this.direction='down'
-//         break;
-//         case '37':
-//         this.direction='left'
-//         break;
-//         case '39':
-//         this.direction='right'
-//         break;
-//         case '32'://发射子弹
-//         this.shoot()
-//         break;
-//     }
-// }
+Tank.prototype.run=function(e,tankTime,tank){
+    switch(e){
+        case 38:
+        this.direction='up'
+        // console.log(tank);
+        tankTime=setInterval(()=>{
+        tank.style.top=parseFloat(getComputedStyle(tank).top)-1+'px'
+        if(parseFloat(getComputedStyle(tank).top)<0){
+            tank.style.top=0
+        }
+    },10)
+        break;
+        case 40:
+        this.direction='down'
+        tankTime=setInterval(()=>{
+        tank.style.top=parseFloat(getComputedStyle(tank).top)+1+'px'
+        if(parseFloat(getComputedStyle(tank).top)>this.map.height-parseFloat(tank.style.height)){
+            tank.style.top=this.map.height-parseFloat(tank.style.height)+'px'
+        }
+    },10)
+        break;
+        case 37:
+        this.direction='left'
+        tankTime=setInterval(()=>{
+        tank.style.left=parseFloat(getComputedStyle(tank).left)-1+'px'
+        if(parseFloat(getComputedStyle(tank).left)<0){
+            tank.style.left=0
+        }
+    },10)
+        break;
+        case 39:
+        this.direction='right'
+        tankTime=setInterval(()=>{
+        tank.style.left=parseFloat(getComputedStyle(tank).left)+1+'px'
+        if(parseFloat(getComputedStyle(tank).left)>this.map.width-parseFloat(tank.style.width)){
+            tank.style.left=this.map.width-parseFloat(tank.style.width)+'px'
+        }
+    },10)
+        break;
+        case 32://发射子弹
+        this.shoot()
+        break;
+    }
+    return tankTime
 }
 //自主坦克由玩家控制
 function PersonTank(map) {
 Tank.call(this,map)
 //自主坦克的样式属性添加
-this.box.style.left=parseFloat(getComputedStyle(map.canvas).width)*0.5+'px';
-this.box.style.bottom=0
-this.box.style.backgroundColor='yellow'
-this.box.style.transform='translateX(-50%)'
+// this.borderWidth=map.borderWidth-parseFloat(this.box.style.width)
+// this.borderHeight=map.borderWidth-parseFloat(this.box.style.height)
+this.box.style.left=map.width/2-parseFloat(this.box.style.width)+'px';
+this.box.style.top=map.height-parseFloat(this.box.style.width)+'px'
+this.box.style.backgroundColor='red'
 this.control()
 }
 PersonTank.prototype=Object.create(Tank.prototype)
 PersonTank.prototype.constructor=PersonTank
-
-
+//坦克的方向控制及运动
+PersonTank.prototype.control=function(){
+    var tankTime=null
+window.onkeydown=(e)=>{
+    clearInterval(tankTime)
+   tankTime=this.run(e.keyCode,tankTime,this.box)
+}
+window.onkeyup=()=>{
+    clearInterval(tankTime)
+}
+}
 // 电脑坦克继承坦克原型，随机发射子弹，随意走动，给个数组，数组中元素为坦克个数，定时器创造坦克节点，最多10个，取消定时器，
+function ComputerTank(map) {
+Tank.call(this,map)
+//电脑坦克的样式属性添加
+// this.control()
+this.map=map
+// 电脑坦克的数量
+this.coputerTankList=[]
+}
+// 继承tank
+ComputerTank.prototype=Object.create(Tank.prototype)
+ComputerTank.prototype.constructor=ComputerTank
+ComputerTank.prototype.createTank=function(){
+    // 电脑坦克的数量
+    var tankNum=3
+    for(var i = 0;i<tankNum;i++){
+        var tank=document.createElement('div')
+        tank.style.cssText=`width:${this.box.style.width};height:${this.box.style.height};position:absolute`
+        tank.style.backgroundColor='gray'
+        tank.style.left=Math.random()*this.borderWidth+'px';
+        tank.style.top=Math.random()*this.borderHeight+'px'
+        // this.coputerTankList[0]=tank
+        this.coputerTankList.push(tank)
+        this.map.canvas.appendChild(tank)
+    }
+}
+ComputerTank.prototype.randomRun=function(){
+    // 
+    this.coputerTankList.forEach(element => {
+        var tankTime
+        setInterval(()=>{
+        clearInterval(tankTime)
+        var num=Math.random()
+        if(num<=0.25)num=37
+        if(num<=0.5&&num>0.25)num=38
+        if(num<=0.75&&num>0.5)num=39
+        if(num<=1&&num>0.75)num=40
+        // console.log(num);
+         tankTime=this.run(num,null,element)
+    },1000)
+    });
+}
+
+
+
+// 创造地图
     var map=new Map()
     map.createMap()
+// 自主坦克
     var tank=new PersonTank(map)
-    console.log(tank);
     tank.createTank()
-    // tank.shoot()
+
+    var computer=new ComputerTank(map)
+    computer.createTank()
+    computer.randomRun()
+    // console.log(tank);
 </script>
 </body>
 </html>
